@@ -157,6 +157,11 @@ def cmd_backtest(args):
     print("\n" + AVISO)
 
 
+def cmd_web(args):
+    from .web import ejecutar
+    ejecutar(args.datos, args.temporadas, args.vida_media, args.puerto, not args.no_abrir)
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser(prog="futbol-ia", description="IA de análisis de partidos de fútbol para apuestas.")
     sub = ap.add_subparsers(dest="cmd", required=True)
@@ -196,6 +201,11 @@ def main(argv=None):
     p.add_argument("--staking", choices=["kelly", "plano"], default="kelly")
     p.add_argument("--csv")
     p.set_defaults(f=cmd_backtest)
+
+    p = sub.add_parser("web", help="abre el panel visual en el navegador"); comunes(p, liga=False)
+    p.add_argument("--puerto", type=int, default=8765)
+    p.add_argument("--no-abrir", action="store_true", help="no abrir el navegador automáticamente")
+    p.set_defaults(f=cmd_web)
 
     args = ap.parse_args(argv)
     try:

@@ -85,6 +85,26 @@ class TestFutbolIA(unittest.TestCase):
              mock.patch.object(data, "cargar_liga", return_value=self.partidos):
             self.assertEqual(main(["jornada", "--banca", "1000"]), 0)
 
+    def test_web_api(self):
+        import json
+        import threading
+        import urllib.request
+        from unittest import mock
+        from futbol_ia import web
+        with mock.patch.object(data, "cargar_liga", return_value=self.partidos):
+            srv = web.crear_servidor(web.Analizador(), puerto=0)
+            threading.Thread(target=srv.serve_forever, daemon=True).start()
+            url = f"http://127.0.0.1:{srv.server_address[1]}"
+            try:
+                get = lambda r: json.load(urllib.request.urlopen(url + r))
+                self.assertIn("SP1", get("/api/ligas")["principales"])
+                self.assertEqual(len(get("/api/ranking?liga=SP1")["equipos"]), 20)
+                p = get("/api/predecir?liga=SP1&local=Equipo00&visitante=Equipo19&cuotas=1.5,4.5,8")
+                self.assertAlmostEqual(p["probs"]["1"] + p["probs"]["X"] + p["probs"]["2"], 1, places=3)
+                self.assertIn("Futbol IA", urllib.request.urlopen(url).read().decode())
+            finally:
+                srv.shutdown()
+
 
 if __name__ == "__main__":
     unittest.main()

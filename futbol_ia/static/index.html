@@ -1,0 +1,432 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Futbol IA</title>
+<style>
+:root{
+  --bg:#f4f6f5; --panel:#ffffff; --panel2:#eef1ef; --line:#dde3df; --text:#16201b; --muted:#5d6b63;
+  --accent:#0f8a5f; --accent-soft:#d8f0e5; --c1:#0f8a5f; --cx:#9aa5a0; --c2:#2f6fd6;
+  --good:#0f8a5f; --bad:#c63b3b; --warn:#b7791f; --gold:#c08a12; --gold-soft:#fbefd2;
+  --shadow:0 1px 2px rgba(0,0,0,.05),0 4px 16px rgba(0,0,0,.04);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0c110f; --panel:#141b18; --panel2:#1b2420; --line:#26322d; --text:#e7efea; --muted:#8fa199;
+    --accent:#2fc488; --accent-soft:#143528; --c1:#2fc488; --cx:#6b7a73; --c2:#5b9bff;
+    --good:#2fc488; --bad:#ef6464; --warn:#e0a640; --gold:#f0b93a; --gold-soft:#3a2e12;
+    --shadow:0 1px 2px rgba(0,0,0,.4);
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0c110f; --panel:#141b18; --panel2:#1b2420; --line:#26322d; --text:#e7efea; --muted:#8fa199;
+  --accent:#2fc488; --accent-soft:#143528; --c1:#2fc488; --cx:#6b7a73; --c2:#5b9bff;
+  --good:#2fc488; --bad:#ef6464; --warn:#e0a640; --gold:#f0b93a; --gold-soft:#3a2e12;
+  --shadow:0 1px 2px rgba(0,0,0,.4);
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:14px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+button,input,select{font:inherit;color:inherit}
+.wrap{max-width:1240px;margin:0 auto;padding:0 16px}
+header{position:sticky;top:0;z-index:5;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+.top{display:flex;align-items:center;gap:16px;height:58px}
+.logo{display:flex;align-items:center;gap:8px;font-weight:800;font-size:17px;letter-spacing:-.02em;white-space:nowrap}
+.logo svg{width:26px;height:26px}
+nav{display:flex;gap:4px;overflow-x:auto}
+nav button{border:0;background:none;padding:8px 12px;border-radius:8px;color:var(--muted);cursor:pointer;font-weight:600;white-space:nowrap}
+nav button.on{background:var(--accent-soft);color:var(--accent)}
+.spacer{flex:1}
+.ajustes{display:flex;gap:10px;align-items:center;color:var(--muted);font-size:12px}
+.ajustes input[type=number]{width:84px}
+input,select{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:7px 9px}
+input:focus,select:focus{outline:2px solid var(--accent);outline-offset:-1px}
+.btn{background:var(--accent);color:#fff;border:0;border-radius:8px;padding:8px 16px;font-weight:700;cursor:pointer}
+.btn:disabled{opacity:.5;cursor:wait}
+.ghost{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:7px 10px;cursor:pointer}
+main{padding:20px 0 60px}
+h2{margin:0 0 4px;font-size:22px;letter-spacing:-.02em}
+.sub{color:var(--muted);margin:0 0 16px}
+.barra{display:flex;flex-wrap:wrap;gap:10px;align-items:end;margin-bottom:16px}
+.campo{display:flex;flex-direction:column;gap:4px;font-size:12px;color:var(--muted)}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px}
+.chip{border:1px solid var(--line);background:var(--panel);border-radius:999px;padding:4px 11px;cursor:pointer;font-size:12px;font-weight:600}
+.chip.on{background:var(--text);color:var(--bg);border-color:var(--text)}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:18px}
+.kpi{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px;box-shadow:var(--shadow)}
+.kpi .l{color:var(--muted);font-size:12px}
+.kpi .v{font-size:24px;font-weight:800;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:14px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px;box-shadow:var(--shadow);cursor:pointer;transition:transform .12s,border-color .12s}
+.card:hover{transform:translateY(-2px);border-color:var(--accent)}
+.card.valor{border-color:var(--gold);box-shadow:0 0 0 1px var(--gold) inset,var(--shadow)}
+.meta{display:flex;justify-content:space-between;color:var(--muted);font-size:12px;margin-bottom:10px}
+.equipos{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:8px;margin-bottom:12px}
+.eq{font-weight:700;font-size:15px;line-height:1.2}
+.eq.r{text-align:right}
+.xg{font-variant-numeric:tabular-nums;font-weight:800;font-size:18px;color:var(--muted);text-align:center;white-space:nowrap}
+.xg small{display:block;font-size:10px;font-weight:600;letter-spacing:.06em}
+.prob{display:flex;height:28px;border-radius:7px;overflow:hidden;font-size:12px;font-weight:700;color:#fff}
+.prob div{display:flex;align-items:center;justify-content:center;min-width:0;white-space:nowrap;overflow:hidden}
+.leyenda{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-top:4px;font-variant-numeric:tabular-nums}
+.mini{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}
+.mini div{background:var(--panel2);border-radius:8px;padding:6px 8px}
+.mini b{display:block;font-size:15px;font-variant-numeric:tabular-nums}
+.mini span{font-size:11px;color:var(--muted)}
+.badges{display:flex;flex-direction:column;gap:6px;margin-top:12px}
+.badge{display:flex;justify-content:space-between;gap:8px;background:var(--gold-soft);color:var(--text);border-radius:8px;padding:7px 10px;font-size:13px}
+.badge b{color:var(--gold)}
+.aviso{font-size:12px;color:var(--warn);margin-top:8px}
+.vacio{text-align:center;color:var(--muted);padding:60px 20px;border:1px dashed var(--line);border-radius:14px}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px;box-shadow:var(--shadow);margin-bottom:16px}
+.dos{display:grid;grid-template-columns:1.2fr 1fr;gap:16px}
+@media (max-width:860px){.dos{grid-template-columns:1fr}.top{flex-wrap:wrap;height:auto;padding:8px 16px;gap:8px}.spacer{display:none}.ajustes{width:100%;flex-wrap:wrap}.ajustes input[type=number]{width:70px}}
+table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
+th,td{padding:7px 8px;border-bottom:1px solid var(--line);text-align:right}
+th:first-child,td:first-child,th.l,td.l{text-align:left}
+th{color:var(--muted);font-weight:600;font-size:12px}
+.mercados{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px}
+.mercado{background:var(--panel2);border-radius:8px;padding:8px 10px;display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.mercado b{white-space:nowrap}
+.mercado span{color:var(--muted);font-size:12px}
+.mercado b{font-variant-numeric:tabular-nums}
+.mercado em{font-style:normal;color:var(--muted);font-size:11px;margin-left:6px}
+.heat{display:grid;grid-template-columns:28px repeat(6,1fr);gap:3px;font-size:11px;font-variant-numeric:tabular-nums}
+.heat div{aspect-ratio:1.5;display:flex;align-items:center;justify-content:center;border-radius:5px}
+.heat .h{color:var(--muted);font-weight:700}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;align-items:flex-start;justify-content:center;padding:40px 16px;overflow:auto;z-index:20}
+.modal.on{display:flex}
+.modal .caja{background:var(--bg);border:1px solid var(--line);border-radius:16px;max-width:980px;width:100%;padding:20px;position:relative}
+.cerrar{position:absolute;top:12px;right:12px}
+.cargando{display:flex;align-items:center;gap:10px;color:var(--muted);padding:40px;justify-content:center}
+.spin{width:18px;height:18px;border:2px solid var(--line);border-top-color:var(--accent);border-radius:50%;animation:g 0.8s linear infinite}
+@keyframes g{to{transform:rotate(360deg)}}
+.err{background:color-mix(in srgb,var(--bad) 12%,transparent);color:var(--bad);padding:10px 12px;border-radius:8px;margin-bottom:12px}
+.pie{color:var(--muted);font-size:12px;border-top:1px solid var(--line);padding:16px 0;margin-top:30px}
+.pos{color:var(--good)} .neg{color:var(--bad)}
+svg text{fill:var(--muted);font-size:11px}
+.tt{position:fixed;pointer-events:none;background:var(--text);color:var(--bg);padding:5px 8px;border-radius:6px;font-size:12px;display:none;z-index:30}
+</style>
+</head>
+<body>
+<header><div class="wrap top">
+  <div class="logo"><svg viewBox="0 0 32 32"><circle cx="16" cy="16" r="14" fill="var(--accent)"/><path d="M16 9l5 3.6-1.9 5.9h-6.2L11 12.6z" fill="var(--bg)"/><path d="M16 2v7M21 12.6l6.5-2.3M19.1 18.5l4 5.5M12.9 18.5l-4 5.5M11 12.6l-6.5-2.3" stroke="var(--bg)" stroke-width="1.6"/></svg>Futbol IA</div>
+  <nav id="nav">
+    <button data-v="jornada" class="on">Jornada</button>
+    <button data-v="partido">Partido</button>
+    <button data-v="ranking">Ranking</button>
+    <button data-v="backtest">Backtest</button>
+  </nav>
+  <div class="spacer"></div>
+  <div class="ajustes">
+    <label title="1 = solo modelo · 0 = solo mercado">Peso modelo <input id="peso" type="number" min="0" max="1" step="0.1" value="0.5"></label>
+    <label title="Valor esperado mínimo">VE mín. % <input id="vmin" type="number" min="0" max="50" step="1" value="5"></label>
+    <label>Banca <input id="banca" type="number" min="0" step="50" value="1000"></label>
+  </div>
+</div></header>
+
+<main class="wrap">
+  <section id="v-jornada">
+    <h2>Próximos partidos</h2>
+    <p class="sub">Probabilidades del modelo frente a las cuotas publicadas. En dorado, las apuestas con valor.</p>
+    <div class="barra">
+      <label class="campo">Días<select id="dias"><option>1</option><option>3</option><option selected>7</option><option>14</option></select></label>
+      <label class="campo">Orden<select id="orden"><option value="fecha">Fecha</option><option value="valor">Mayor valor</option></select></label>
+      <label class="campo" style="flex-direction:row;align-items:center;gap:6px;padding-bottom:8px"><input id="soloValor" type="checkbox"> Solo con valor</label>
+      <button class="btn" id="cargarJornada">Analizar</button>
+    </div>
+    <div id="chipsLigas" class="chips"></div>
+    <div id="kpisJornada" class="kpis"></div>
+    <div id="jornada"></div>
+  </section>
+
+  <section id="v-partido" hidden>
+    <h2>Analizar un partido</h2>
+    <p class="sub">Elige liga y equipos. Añade las cuotas de tu casa para detectar valor.</p>
+    <div class="panel barra">
+      <label class="campo">Liga<select id="pLiga" class="selLiga"></select></label>
+      <label class="campo">Local<select id="pLocal"></select></label>
+      <label class="campo">Visitante<select id="pVisit"></select></label>
+      <label class="campo">Cuotas 1 / X / 2<span style="display:flex;gap:4px"><input id="c1" size="4" placeholder="1"><input id="cx" size="4" placeholder="X"><input id="c2" size="4" placeholder="2"></span></label>
+      <label class="campo">+2.5 / -2.5<span style="display:flex;gap:4px"><input id="co" size="4" placeholder="+2.5"><input id="cu" size="4" placeholder="-2.5"></span></label>
+      <button class="btn" id="btnPredecir">Analizar</button>
+    </div>
+    <div id="partido"></div>
+  </section>
+
+  <section id="v-ranking" hidden>
+    <h2>Fuerza de los equipos</h2>
+    <p class="sub">Calculada con los últimos partidos, dando más peso a los recientes.</p>
+    <div class="barra"><label class="campo">Liga<select id="rLiga" class="selLiga"></select></label></div>
+    <div id="ranking"></div>
+  </section>
+
+  <section id="v-backtest" hidden>
+    <h2>Backtest</h2>
+    <p class="sub">¿Cuánto habría ganado o perdido la estrategia? El modelo solo ve el pasado y apuesta a las cuotas reales de entonces.</p>
+    <div class="panel barra">
+      <label class="campo">Liga<select id="bLiga" class="selLiga"></select></label>
+      <label class="campo">Desde<input id="bDesde" type="date"></label>
+      <label class="campo">Stake<select id="bStake"><option value="kelly">Kelly ¼</option><option value="plano">Fijo (10)</option></select></label>
+      <button class="btn" id="btnBacktest">Simular</button>
+    </div>
+    <div id="backtest"></div>
+  </section>
+
+  <div class="pie">⚠ Ningún modelo garantiza ganancias: las casas tienen margen y el mercado es muy eficiente. El modelo no conoce lesiones, rotaciones ni motivación. Apuesta solo lo que puedas permitirte perder. Juega con responsabilidad.</div>
+</main>
+
+<div class="modal" id="modal"><div class="caja"><button class="ghost cerrar" id="cerrar">✕</button><div id="modalBody"></div></div></div>
+<div class="tt" id="tt"></div>
+
+<script>
+const $ = s => document.querySelector(s);
+const pct = (x, d=0) => (100*x).toFixed(d) + '%';
+const fair = p => p > 0 ? (1/p).toFixed(2) : '—';
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const DIAS = ['dom','lun','mar','mié','jue','vie','sáb'];
+let LIGAS = {}, JORNADA = null, ligasSel = new Set();
+
+function store(k, v){ try { if (v === undefined) return localStorage.getItem(k); localStorage.setItem(k, v); } catch(e){ return null; } }
+for (const id of ['peso','vmin','banca']) { const v = store('fia_'+id); if (v !== null) $('#'+id).value = v; $('#'+id).onchange = () => { store('fia_'+id, $('#'+id).value); if (JORNADA) pintarJornada(); }; }
+const peso = () => +$('#peso').value, vmin = () => +$('#vmin').value / 100, banca = () => +$('#banca').value || 0;
+
+async function api(ruta, q={}) {
+  const r = await fetch('/api/' + ruta + '?' + new URLSearchParams(q));
+  const j = await r.json();
+  if (!r.ok || j.error) throw new Error(j.error || r.statusText);
+  return j;
+}
+const cargando = t => `<div class="cargando"><div class="spin"></div>${t}</div>`;
+const error = e => `<div class="err">⚠ ${esc(e.message || e)}</div>`;
+
+// ---------- navegación
+document.querySelectorAll('#nav button').forEach(b => b.onclick = () => {
+  document.querySelectorAll('#nav button').forEach(x => x.classList.toggle('on', x === b));
+  document.querySelectorAll('main > section').forEach(s => s.hidden = s.id !== 'v-' + b.dataset.v);
+  store('fia_vista', b.dataset.v);
+  if (b.dataset.v === 'ranking' && !$('#ranking').innerHTML) cargarRanking();
+  if (b.dataset.v === 'partido' && !$('#pLocal').options.length) cargarEquipos();
+});
+
+// ---------- componentes
+function barra1x2(p) {
+  const seg = (v, c, t) => `<div style="width:${100*v}%;background:${c}">${v > .11 ? t + ' ' + pct(v) : ''}</div>`;
+  return `<div class="prob">${seg(p['1'],'var(--c1)','1')}${seg(p['X'],'var(--cx)','X')}${seg(p['2'],'var(--c2)','2')}</div>`;
+}
+function badges(m) {
+  return m.valor.map(a => `<div class="badge"><span>★ <b>${esc(a.seleccion)}</b> @${a.cuota.toFixed(2)} · prob ${pct(a.prob)} vs ${pct(a.prob_mercado)}</span>
+    <span><b>VE ${a.ve >= 0 ? '+' : ''}${(100*a.ve).toFixed(1)}%</b> · ${banca() ? (banca()*a.stake).toFixed(0) + ' €' : pct(a.stake,1)}</span></div>`).join('');
+}
+function fecha(m) {
+  const d = new Date(m.fecha + 'T12:00:00');
+  return `${DIAS[d.getDay()]} ${d.getDate()}/${d.getMonth()+1}${m.hora ? ' · ' + m.hora : ''}`;
+}
+function tarjeta(m, i) {
+  const p = m.probs;
+  return `<div class="card ${m.valor.length ? 'valor' : ''}" data-i="${i}">
+    <div class="meta"><span>${esc(m.liga_nombre || m.liga)}</span><span>${fecha(m)}</span></div>
+    <div class="equipos"><div class="eq">${esc(m.local)}</div>
+      <div class="xg">${m.xg[0].toFixed(1)} – ${m.xg[1].toFixed(1)}<small>GOLES ESP.</small></div>
+      <div class="eq r">${esc(m.visitante)}</div></div>
+    ${barra1x2(p)}
+    <div class="leyenda"><span>justa @${fair(p['1'])}${m.cuotas_1x2 ? ' · casa @' + m.cuotas_1x2[0].toFixed(2) : ''}</span>
+      <span>X @${fair(p['X'])}${m.cuotas_1x2 ? ' · ' + m.cuotas_1x2[1].toFixed(2) : ''}</span>
+      <span>@${fair(p['2'])}${m.cuotas_1x2 ? ' · casa @' + m.cuotas_1x2[2].toFixed(2) : ''}</span></div>
+    <div class="mini"><div><b>${pct(p['Más 2.5'])}</b><span>Más de 2.5</span></div>
+      <div><b>${pct(p['Ambos marcan: Sí'])}</b><span>Ambos marcan</span></div>
+      <div><b>${esc(m.marcadores[0][0])}</b><span>Más probable</span></div></div>
+    ${m.desconocidos.length ? `<div class="aviso">Sin historial de ${m.desconocidos.map(esc).join(', ')}: no se recomienda apostar.</div>` : ''}
+    ${m.valor.length ? '<div class="badges">' + badges(m) + '</div>' : ''}
+  </div>`;
+}
+function heatmap(mat) {
+  const max = Math.max(...mat.flat());
+  let h = '<div class="h"></div>' + [0,1,2,3,4,5].map(j => `<div class="h">${j}</div>`).join('');
+  mat.forEach((fila, i) => {
+    h += `<div class="h">${i}</div>` + fila.map(v => {
+      const a = v / max;
+      return `<div style="background:color-mix(in srgb,var(--accent) ${Math.round(a*85)}%,var(--panel2));color:${a > .55 ? '#fff' : 'var(--text)'}">${(100*v).toFixed(1)}</div>`;
+    }).join('');
+  });
+  return `<div class="heat">${h}</div><div class="leyenda"><span>Filas: goles de ${'local'} · Columnas: goles del visitante (%)</span></div>`;
+}
+function detalle(m) {
+  const p = m.probs;
+  const grupos = [['1','X','2','1X','X2','12'], ['Más 1.5','Menos 1.5','Más 2.5','Menos 2.5','Más 3.5','Menos 3.5'],
+                  ['Ambos marcan: Sí','Ambos marcan: No','Local marca','Visitante marca','Más 0.5','Más 4.5']];
+  return `<div class="meta"><span>${esc(m.liga_nombre || m.liga || '')}</span><span>${m.fecha ? fecha(m) : ''}</span></div>
+    <div class="equipos" style="margin-bottom:16px"><div class="eq" style="font-size:22px">${esc(m.local)}</div>
+      <div class="xg" style="font-size:26px">${m.xg[0].toFixed(2)} – ${m.xg[1].toFixed(2)}<small>GOLES ESPERADOS</small></div>
+      <div class="eq r" style="font-size:22px">${esc(m.visitante)}</div></div>
+    ${barra1x2(p)}<div class="leyenda"><span>Local ${pct(p['1'],1)}</span><span>Empate ${pct(p['X'],1)}</span><span>Visitante ${pct(p['2'],1)}</span></div>
+    ${m.desconocidos.length ? `<div class="aviso">Sin historial de ${m.desconocidos.map(esc).join(', ')}: predicción poco fiable.</div>` : ''}
+    ${m.valor.length ? '<div class="badges">' + badges(m) + '</div>' : (m.cuotas_1x2 ? '<p class="sub" style="margin-top:12px">Ninguna cuota ofrece valor suficiente. No apostar también es una buena decisión.</p>' : '')}
+    <div class="dos" style="margin-top:16px">
+      <div class="panel"><h3 style="margin:0 0 10px">Mercados <span class="sub" style="font-size:12px;font-weight:400">probabilidad · cuota justa</span></h3>
+        ${grupos.map(g => `<div class="mercados" style="margin-bottom:8px">${g.map(k => `<div class="mercado"><span>${k}</span><b>${pct(p[k],1)}<em>@${fair(p[k])}</em></b></div>`).join('')}</div>`).join('')}
+      </div>
+      <div class="panel"><h3 style="margin:0 0 10px">Marcador exacto</h3>${heatmap(m.matriz)}
+        <div class="chips" style="margin-top:12px">${m.marcadores.map(([s,v]) => `<span class="chip">${s} · ${pct(v,1)}</span>`).join('')}</div></div>
+    </div>`;
+}
+function abrir(m) { $('#modalBody').innerHTML = detalle(m); $('#modal').classList.add('on'); }
+$('#cerrar').onclick = () => $('#modal').classList.remove('on');
+$('#modal').onclick = e => { if (e.target.id === 'modal') $('#modal').classList.remove('on'); };
+document.addEventListener('keydown', e => { if (e.key === 'Escape') $('#modal').classList.remove('on'); });
+
+// ---------- jornada
+async function cargarJornada() {
+  $('#cargarJornada').disabled = true;
+  $('#jornada').innerHTML = cargando('Descargando datos y ajustando modelos de cada liga… (la primera vez tarda un poco)');
+  $('#kpisJornada').innerHTML = '';
+  try {
+    JORNADA = await api('jornada', {dias: $('#dias').value, peso: peso(), vmin: vmin()});
+    const ligas = [...new Set(JORNADA.partidos.map(m => m.liga))];
+    if (!ligasSel.size) ligas.forEach(l => ligasSel.add(l));
+    $('#chipsLigas').innerHTML = ligas.map(l => `<button class="chip ${ligasSel.has(l) ? 'on' : ''}" data-l="${l}">${esc(LIGAS[l] || l)}</button>`).join('');
+    $('#chipsLigas').querySelectorAll('.chip').forEach(c => c.onclick = () => {
+      ligasSel.has(c.dataset.l) ? ligasSel.delete(c.dataset.l) : ligasSel.add(c.dataset.l);
+      c.classList.toggle('on'); pintarJornada();
+    });
+    pintarJornada();
+  } catch (e) { $('#jornada').innerHTML = error(e); }
+  $('#cargarJornada').disabled = false;
+}
+function pintarJornada() {
+  if (!JORNADA) return;
+  let ps = JORNADA.partidos.filter(m => ligasSel.has(m.liga));
+  const conValor = ps.filter(m => m.valor.length);
+  if ($('#soloValor').checked) ps = conValor;
+  if ($('#orden').value === 'valor') ps = [...ps].sort((a,b) => (b.valor[0]?.ve ?? -1) - (a.valor[0]?.ve ?? -1));
+  const apuestas = conValor.flatMap(m => m.valor);
+  const mejor = apuestas.reduce((a,b) => b.ve > (a?.ve ?? -1) ? b : a, null);
+  const stake = apuestas.reduce((s,a) => s + a.stake, 0);
+  $('#kpisJornada').innerHTML = `
+    <div class="kpi"><div class="l">Partidos analizados</div><div class="v">${JORNADA.partidos.filter(m => ligasSel.has(m.liga)).length}</div></div>
+    <div class="kpi"><div class="l">Apuestas con valor</div><div class="v" style="color:var(--gold)">${apuestas.length}</div></div>
+    <div class="kpi"><div class="l">Mejor valor esperado</div><div class="v">${mejor ? '+' + (100*mejor.ve).toFixed(1) + '%' : '—'}</div></div>
+    <div class="kpi"><div class="l">Banca recomendada en juego</div><div class="v">${banca() ? (banca()*stake).toFixed(0) + ' €' : pct(stake,1)}</div></div>`;
+  const errs = Object.entries(JORNADA.errores || {}).map(([l,e]) => `<div class="err">${esc(LIGAS[l] || l)}: ${esc(e)}</div>`).join('');
+  window._ps = ps;
+  $('#jornada').innerHTML = errs + (ps.length ? `<div class="grid">${ps.map(tarjeta).join('')}</div>`
+    : '<div class="vacio">No hay partidos que mostrar con estos filtros.</div>');
+  $('#jornada').querySelectorAll('.card').forEach(c => c.onclick = () => abrir(ps[+c.dataset.i]));
+}
+$('#cargarJornada').onclick = cargarJornada;
+$('#soloValor').onchange = pintarJornada;
+$('#orden').onchange = pintarJornada;
+$('#dias').onchange = cargarJornada;
+
+// ---------- partido
+async function cargarEquipos() {
+  $('#pLocal').innerHTML = $('#pVisit').innerHTML = '<option>Cargando…</option>';
+  try {
+    const {equipos} = await api('equipos', {liga: $('#pLiga').value});
+    const opts = equipos.map(e => `<option>${esc(e)}</option>`).join('');
+    $('#pLocal').innerHTML = $('#pVisit').innerHTML = opts;
+    if (equipos.length > 1) $('#pVisit').selectedIndex = 1;
+    $('#partido').innerHTML = '';
+  } catch (e) { $('#partido').innerHTML = error(e); $('#pLocal').innerHTML = $('#pVisit').innerHTML = ''; }
+}
+$('#pLiga').onchange = cargarEquipos;
+$('#btnPredecir').onclick = async () => {
+  const c = ['c1','cx','c2'].map(i => $('#'+i).value.replace(',', '.')), g = ['co','cu'].map(i => $('#'+i).value.replace(',', '.'));
+  $('#partido').innerHTML = cargando('Calculando…');
+  try {
+    const m = await api('predecir', {liga: $('#pLiga').value, local: $('#pLocal').value, visitante: $('#pVisit').value,
+      cuotas: c.every(Boolean) ? c.join(',') : '', cuotas_goles: g.every(Boolean) ? g.join(',') : '', peso: peso(), vmin: vmin()});
+    m.liga_nombre = LIGAS[$('#pLiga').value];
+    $('#partido').innerHTML = `<div class="panel" style="background:var(--bg)">${detalle(m)}</div>`;
+  } catch (e) { $('#partido').innerHTML = error(e); }
+};
+
+// ---------- ranking
+async function cargarRanking() {
+  $('#ranking').innerHTML = cargando('Ajustando modelo…');
+  try {
+    const r = await api('ranking', {liga: $('#rLiga').value});
+    const max = Math.max(...r.equipos.map(e => Math.abs(e.fuerza)));
+    const filas = r.equipos.map((e, i) => {
+      const w = 50 * Math.abs(e.fuerza) / max, pos = e.fuerza >= 0;
+      return `<tr><td>${i+1}</td><td class="l"><b>${esc(e.equipo)}</b></td>
+        <td style="width:40%"><div style="position:relative;height:14px;background:var(--panel2);border-radius:4px">
+          <div style="position:absolute;top:0;bottom:0;${pos ? 'left:50%' : 'right:50%'};width:${w}%;background:${pos ? 'var(--c1)' : 'var(--bad)'};border-radius:4px"></div>
+          <div style="position:absolute;left:50%;top:-2px;bottom:-2px;width:1px;background:var(--muted)"></div></div></td>
+        <td class="${pos ? 'pos' : 'neg'}">${e.fuerza >= 0 ? '+' : ''}${e.fuerza.toFixed(2)}</td>
+        <td>${e.ataque.toFixed(2)}</td><td>${e.defensa.toFixed(2)}</td></tr>`;
+    }).join('');
+    $('#ranking').innerHTML = `<div class="kpis">
+      <div class="kpi"><div class="l">Partidos usados</div><div class="v">${r.partidos}</div></div>
+      <div class="kpi"><div class="l">Ventaja de jugar en casa</div><div class="v">×${r.ventaja_local.toFixed(2)}</div></div>
+      <div class="kpi"><div class="l">Equipos</div><div class="v">${r.equipos.length}</div></div></div>
+      <div class="panel"><table><thead><tr><th>#</th><th class="l">Equipo</th><th class="l">Fuerza neta</th><th></th>
+      <th title=">1 marca más que la media">Ataque</th><th title="<1 concede menos que la media">Defensa</th></tr></thead><tbody>${filas}</tbody></table>
+      <p class="sub" style="margin:10px 0 0;font-size:12px">Ataque &gt; 1: marca más que la media · Defensa &lt; 1: concede menos que la media.</p></div>`;
+  } catch (e) { $('#ranking').innerHTML = error(e); }
+}
+$('#rLiga').onchange = cargarRanking;
+
+// ---------- backtest
+function grafica(serie, inicial) {
+  const W = 900, H = 260, P = {l: 52, r: 14, t: 14, b: 26};
+  if (serie.length < 2) return '<div class="vacio">No hubo apuestas en el periodo.</div>';
+  const ys = serie.map(s => s[1]), min = Math.min(...ys, inicial), max = Math.max(...ys, inicial);
+  const x = i => P.l + (W - P.l - P.r) * i / (serie.length - 1);
+  const y = v => P.t + (H - P.t - P.b) * (1 - (v - min) / ((max - min) || 1));
+  const linea = serie.map((s, i) => `${i ? 'L' : 'M'}${x(i).toFixed(1)},${y(s[1]).toFixed(1)}`).join('');
+  const fin = ys[ys.length - 1], color = fin >= inicial ? 'var(--good)' : 'var(--bad)';
+  const ticks = [min, (min + max) / 2, max].map(v => `<line x1="${P.l}" x2="${W-P.r}" y1="${y(v)}" y2="${y(v)}" stroke="var(--line)"/><text x="${P.l-6}" y="${y(v)+4}" text-anchor="end">${v.toFixed(0)}</text>`).join('');
+  const fechas = [0, Math.floor((serie.length-1)/2), serie.length-1].map(i => `<text x="${x(i)}" y="${H-6}" text-anchor="${i ? (i === serie.length-1 ? 'end' : 'middle') : 'start'}">${serie[i][0]}</text>`).join('');
+  return `<svg viewBox="0 0 ${W} ${H}" width="100%" id="gBanca" style="display:block">${ticks}
+    <line x1="${P.l}" x2="${W-P.r}" y1="${y(inicial)}" y2="${y(inicial)}" stroke="var(--muted)" stroke-dasharray="4 4"/>
+    <path d="${linea} L${x(serie.length-1)},${y(min)} L${x(0)},${y(min)} Z" fill="${color}" opacity=".10"/>
+    <path d="${linea}" fill="none" stroke="${color}" stroke-width="2"/>${fechas}
+    <circle id="gPunto" r="4" fill="${color}" style="display:none"/></svg>`;
+}
+$('#btnBacktest').onclick = async () => {
+  $('#btnBacktest').disabled = true;
+  $('#backtest').innerHTML = cargando('Simulando temporada partido a partido… puede tardar un minuto');
+  try {
+    const r = await api('backtest', {liga: $('#bLiga').value, desde: $('#bDesde').value, staking: $('#bStake').value, peso: peso(), vmin: vmin()});
+    const s = v => (v >= 0 ? '+' : '') + v.toFixed(2);
+    const mejorQueMercado = r.logloss[0] <= r.logloss[1];
+    $('#backtest').innerHTML = `<div class="kpis">
+      <div class="kpi"><div class="l">ROI</div><div class="v ${r.roi >= 0 ? 'pos' : 'neg'}">${r.roi >= 0 ? '+' : ''}${(100*r.roi).toFixed(1)}%</div></div>
+      <div class="kpi"><div class="l">Beneficio</div><div class="v ${r.beneficio >= 0 ? 'pos' : 'neg'}">${s(r.beneficio)}</div></div>
+      <div class="kpi"><div class="l">Banca ${r.banca_inicial} →</div><div class="v">${r.banca.toFixed(0)}</div></div>
+      <div class="kpi"><div class="l">Apuestas (acierto)</div><div class="v">${r.apuestas} <span style="font-size:14px;color:var(--muted)">(${r.apuestas ? pct(r.ganadas/r.apuestas) : '—'})</span></div></div>
+      <div class="kpi"><div class="l">Máxima caída</div><div class="v neg">−${pct(r.max_caida)}</div></div>
+      <div class="kpi"><div class="l">Precisión vs mercado</div><div class="v ${mejorQueMercado ? 'pos' : 'neg'}" style="font-size:16px">${mejorQueMercado ? 'Mejor' : 'Peor'} que las cuotas</div>
+        <div class="l">log-loss ${r.logloss[0]} vs ${r.logloss[1]}</div></div></div>
+      <div class="panel"><h3 style="margin:0 0 8px">Evolución de la banca desde ${r.desde}</h3>${grafica(r.serie, r.banca_inicial)}</div>
+      <div class="panel" style="overflow-x:auto"><h3 style="margin:0 0 8px">Últimas apuestas</h3><table><thead><tr><th class="l">Fecha</th><th class="l">Partido</th><th class="l">Apuesta</th><th>Cuota</th><th>Prob.</th><th>Stake</th><th>Res.</th><th>Ganancia</th></tr></thead>
+      <tbody>${r.detalle.slice().reverse().slice(0, 60).map(d => `<tr><td class="l">${d[0]}</td><td class="l">${esc(d[1])} – ${esc(d[2])}</td><td class="l">${esc(d[3])}</td><td>${d[4].toFixed(2)}</td><td>${pct(d[5])}</td><td>${d[6].toFixed(2)}</td><td>${d[7]}</td><td class="${d[8] >= 0 ? 'pos' : 'neg'}">${s(d[8])}</td></tr>`).join('')}</tbody></table></div>`;
+    const g = $('#gBanca');
+    if (g) g.onmousemove = e => {
+      const b = g.getBoundingClientRect(), i = Math.round((e.clientX - b.left) / b.width * 900 - 52) / (900 - 66) * (r.serie.length - 1);
+      const k = Math.max(0, Math.min(r.serie.length - 1, Math.round(i)));
+      $('#tt').style.display = 'block'; $('#tt').style.left = e.clientX + 12 + 'px'; $('#tt').style.top = e.clientY - 30 + 'px';
+      $('#tt').textContent = `${r.serie[k][0]} · banca ${r.serie[k][1].toFixed(2)}`;
+    };
+    if (g) g.onmouseleave = () => $('#tt').style.display = 'none';
+  } catch (e) { $('#backtest').innerHTML = error(e); }
+  $('#btnBacktest').disabled = false;
+};
+
+// ---------- inicio
+(async () => {
+  try {
+    const l = await api('ligas');
+    LIGAS = {...l.principales, ...l.extra};
+    const opts = `<optgroup label="Europa">${Object.entries(l.principales).map(([k,v]) => `<option value="${k}">${esc(v)}</option>`).join('')}</optgroup>
+      <optgroup label="Resto del mundo">${Object.entries(l.extra).map(([k,v]) => `<option value="${k}">${esc(v)}</option>`).join('')}</optgroup>`;
+    document.querySelectorAll('.selLiga').forEach(s => { s.innerHTML = opts; s.value = 'SP1'; });
+  } catch (e) {}
+  const v = store('fia_vista');
+  if (v && v !== 'jornada') document.querySelector(`#nav button[data-v="${v}"]`)?.click();
+  cargarJornada();
+})();
+</script>
+</body>
+</html>

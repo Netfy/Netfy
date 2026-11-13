@@ -14,3 +14,6 @@ build-backend = "setuptools.build_meta"
 
 [tool.setuptools]
 packages = ["futbol_ia"]
+
+[tool.setuptools.package-data]
+futbol_ia = ["static/*"]

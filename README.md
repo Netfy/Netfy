@@ -29,7 +29,22 @@ pip install -e .          # instala el comando `futbol-ia`
 # o sin instalar:  python -m futbol_ia <comando>
 ```
 
-## Uso
+## Panel visual
+
+```bash
+futbol-ia web            # abre http://127.0.0.1:8765 en tu navegador
+```
+
+| Pestaña | Qué ves |
+|---|---|
+| **Jornada** | Tarjetas de todos los próximos partidos: barra de probabilidad 1/X/2, goles esperados, cuota justa frente a la de la casa, más de 2.5, ambos marcan, marcador más probable. Las apuestas con valor aparecen en dorado con el dinero recomendado según tu banca. Filtros por liga, días, "solo con valor" y orden por valor. Haz clic en un partido para ver todos los mercados y el mapa de calor de marcadores exactos. |
+| **Partido** | Elige liga y equipos, mete las cuotas de tu casa y analiza. |
+| **Ranking** | Fuerza neta, ataque y defensa de cada equipo en gráfico de barras. |
+| **Backtest** | ROI, beneficio, máxima caída, precisión frente al mercado y gráfica de la evolución de la banca. |
+
+Arriba a la derecha ajustas peso del modelo, valor mínimo y tu banca (se recuerdan). Tema claro/oscuro automático y versión móvil.
+
+## Uso por terminal
 
 ```bash
 futbol-ia ligas                                   # lista de ligas (SP1, E0, I1, MEX, ARG, BRA...)
@@ -88,6 +103,8 @@ futbol_ia/
   valor.py     margen, valor esperado y Kelly
   backtest.py  simulación walk-forward
   cli.py       comandos
+  web.py       servidor local del panel visual
+  static/      interfaz web (HTML/CSS/JS, sin dependencias)
 tests/         pruebas con una liga sintética de fuerzas conocidas
 ```
 
