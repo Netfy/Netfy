@@ -159,7 +159,14 @@ def cmd_backtest(args):
 
 def cmd_web(args):
     from .web import ejecutar
-    ejecutar(args.datos, args.temporadas, args.vida_media, args.puerto, not args.no_abrir)
+    ejecutar(args.salida, args.ligas, args.datos, args.temporadas, args.vida_media, args.puerto,
+             not args.no_abrir, not args.sin_backtest)
+
+
+def cmd_exportar(args):
+    from .exportar import exportar
+    exportar(args.salida, args.ligas, args.datos, args.temporadas, args.vida_media, args.dias,
+             not args.sin_backtest)
 
 
 def main(argv=None):
@@ -203,9 +210,20 @@ def main(argv=None):
     p.set_defaults(f=cmd_backtest)
 
     p = sub.add_parser("web", help="abre el panel visual en el navegador"); comunes(p, liga=False)
+    p.add_argument("--ligas", nargs="*", help="solo estas ligas (por defecto todas; menos ligas = más rápido)")
+    p.add_argument("--salida", default="sitio")
     p.add_argument("--puerto", type=int, default=8765)
+    p.add_argument("--sin-backtest", action="store_true", help="arranca más rápido, sin pestaña de backtest")
     p.add_argument("--no-abrir", action="store_true", help="no abrir el navegador automáticamente")
     p.set_defaults(f=cmd_web)
+
+    p = sub.add_parser("exportar", help="genera la app para el móvil (carpeta lista para publicar)")
+    comunes(p, liga=False)
+    p.add_argument("--ligas", nargs="*")
+    p.add_argument("--salida", default="sitio")
+    p.add_argument("--dias", type=int, default=10)
+    p.add_argument("--sin-backtest", action="store_true")
+    p.set_defaults(f=cmd_exportar)
 
     args = ap.parse_args(argv)
     try:

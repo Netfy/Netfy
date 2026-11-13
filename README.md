@@ -29,20 +29,32 @@ pip install -e .          # instala el comando `futbol-ia`
 # o sin instalar:  python -m futbol_ia <comando>
 ```
 
-## Panel visual
+## 📱 App para el celular
 
-```bash
-futbol-ia web            # abre http://127.0.0.1:8765 en tu navegador
-```
+Futbol IA es una **app web instalable** (PWA): se abre desde un enlace y se instala en la pantalla de inicio
+con su propio icono, a pantalla completa, sin App Store. GitHub la regenera **dos veces al día** con los
+partidos y cuotas nuevos y la publica gratis en GitHub Pages.
+
+**Activarla (una sola vez):** en GitHub → *Settings* → *Pages* → *Build and deployment* → *Source*:
+**GitHub Actions**. Después ve a *Actions* → *Publicar app Futbol IA* → *Run workflow*.
+En unos minutos estará en **https://netfy.github.io/Netfy/**.
+
+**Instalarla en el móvil:**
+- **iPhone (Safari):** abre el enlace → botón *Compartir* → *Añadir a pantalla de inicio*.
+- **Android (Chrome):** abre el enlace → aparecerá *Instalar* (o menú ⋮ → *Instalar aplicación*).
 
 | Pestaña | Qué ves |
 |---|---|
-| **Jornada** | Tarjetas de todos los próximos partidos: barra de probabilidad 1/X/2, goles esperados, cuota justa frente a la de la casa, más de 2.5, ambos marcan, marcador más probable. Las apuestas con valor aparecen en dorado con el dinero recomendado según tu banca. Filtros por liga, días, "solo con valor" y orden por valor. Haz clic en un partido para ver todos los mercados y el mapa de calor de marcadores exactos. |
-| **Partido** | Elige liga y equipos, mete las cuotas de tu casa y analiza. |
-| **Ranking** | Fuerza neta, ataque y defensa de cada equipo en gráfico de barras. |
-| **Backtest** | ROI, beneficio, máxima caída, precisión frente al mercado y gráfica de la evolución de la banca. |
+| **Partidos** | Todos los próximos partidos agrupados por día: barra de probabilidad 1/X/2, goles esperados, cuota justa frente a la de la casa, más de 2.5, ambos marcan, marcador más probable. Las apuestas con valor salen en dorado con cuánto apostar según tu banca. Filtro "★ Con valor" y por liga. Toca un partido para ver todos los mercados y el mapa de marcadores. |
+| **Analizar** | Elige liga y equipos, mete las cuotas de tu casa y analiza al momento. |
+| **Ranking** | Fuerza, ataque y defensa de cada equipo. |
+| **Historial** | Backtest: ROI, evolución de la banca, peor racha y si la IA predice mejor o peor que las cuotas en esa liga. |
 
-Arriba a la derecha ajustas peso del modelo, valor mínimo y tu banca (se recuerdan). Tema claro/oscuro automático y versión móvil.
+En ⚙ *Ajustes* pones tu banca, el valor mínimo y la confianza en la IA (se recuerdan). Funciona sin
+conexión con los últimos datos descargados. Todos los cálculos se hacen en el propio teléfono.
+
+También puedes usarla en el ordenador sin publicarla: `futbol-ia web` (o `futbol-ia web --ligas SP1 E0 MEX`
+para que arranque más rápido).
 
 ## Uso por terminal
 
@@ -103,8 +115,10 @@ futbol_ia/
   valor.py     margen, valor esperado y Kelly
   backtest.py  simulación walk-forward
   cli.py       comandos
-  web.py       servidor local del panel visual
-  static/      interfaz web (HTML/CSS/JS, sin dependencias)
+  exportar.py  genera la app (interfaz + datos.json con modelos, partidos y backtests)
+  web.py       sirve la app en local
+  static/      la app: HTML/CSS/JS, manifest, service worker e iconos
+.github/workflows/app.yml   actualiza y publica la app cada día
 tests/         pruebas con una liga sintética de fuerzas conocidas
 ```
 

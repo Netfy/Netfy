@@ -1,0 +1,51 @@
+name: Publicar app Futbol IA
+
+on:
+  schedule:
+    - cron: "23 5,15 * * *"   # dos veces al día (UTC): datos y cuotas frescos
+  push:
+    branches: [claude/ia-analisis-futbol-vue3te]
+  workflow_dispatch:           # botón "Run workflow" para actualizar a mano
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  construir:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Pruebas
+        run: python -m unittest discover tests
+      - name: Caché de CSVs de temporadas pasadas
+        uses: actions/cache@v4
+        with:
+          path: datos
+          key: csv-${{ github.run_id }}
+          restore-keys: csv-
+      - name: Generar app con datos actualizados
+        run: python -m futbol_ia exportar --salida sitio
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: sitio
+
+  publicar:
+    needs: construir
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - id: deploy
+        uses: actions/deploy-pages@v4

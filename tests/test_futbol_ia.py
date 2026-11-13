@@ -85,25 +85,25 @@ class TestFutbolIA(unittest.TestCase):
              mock.patch.object(data, "cargar_liga", return_value=self.partidos):
             self.assertEqual(main(["jornada", "--banca", "1000"]), 0)
 
-    def test_web_api(self):
+    def test_exportar_app(self):
         import json
-        import threading
-        import urllib.request
+        import tempfile
+        from datetime import date, timedelta
         from unittest import mock
-        from futbol_ia import web
-        with mock.patch.object(data, "cargar_liga", return_value=self.partidos):
-            srv = web.crear_servidor(web.Analizador(), puerto=0)
-            threading.Thread(target=srv.serve_forever, daemon=True).start()
-            url = f"http://127.0.0.1:{srv.server_address[1]}"
-            try:
-                get = lambda r: json.load(urllib.request.urlopen(url + r))
-                self.assertIn("SP1", get("/api/ligas")["principales"])
-                self.assertEqual(len(get("/api/ranking?liga=SP1")["equipos"]), 20)
-                p = get("/api/predecir?liga=SP1&local=Equipo00&visitante=Equipo19&cuotas=1.5,4.5,8")
-                self.assertAlmostEqual(p["probs"]["1"] + p["probs"]["X"] + p["probs"]["2"], 1, places=3)
-                self.assertIn("Futbol IA", urllib.request.urlopen(url).read().decode())
-            finally:
-                srv.shutdown()
+        from futbol_ia.exportar import exportar
+        prox = [data.Partido(date.today() + timedelta(days=1), "SP1", "Equipo00", "Equipo19", cuotas_1x2=(1.5, 4.5, 8.0))]
+        with tempfile.TemporaryDirectory() as d, \
+             mock.patch.object(data, "cargar_proximos", return_value=prox), \
+             mock.patch.object(data, "cargar_liga", return_value=self.partidos):
+            exportar(d, ligas=["SP1"], log=lambda *a: None)
+            for f in ("index.html", "manifest.webmanifest", "sw.js", "icon-192.png", "icon-512.png"):
+                self.assertTrue(os.path.exists(os.path.join(d, f)), f)
+            with open(os.path.join(d, "datos.json"), encoding="utf-8") as fh:
+                j = json.load(fh)
+        self.assertEqual(len(j["partidos"]), 1)
+        mod = j["ligas"]["SP1"]["modelo"]
+        self.assertEqual(len(mod["ataque"]), 20)
+        self.assertIsNotNone(j["ligas"]["SP1"]["backtest"])
 
 
 if __name__ == "__main__":

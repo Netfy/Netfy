@@ -3,3 +3,4 @@ __pycache__/
 datos/
 *.egg-info/
 *.csv
+sitio/
