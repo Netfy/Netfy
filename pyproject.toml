@@ -1,0 +1,16 @@
+[project]
+name = "futbol-ia"
+version = "0.1.0"
+description = "IA de análisis de partidos de fútbol: modelo Dixon-Coles y detección de apuestas de valor"
+requires-python = ">=3.10"
+dependencies = []
+
+[project.scripts]
+futbol-ia = "futbol_ia.cli:main"
+
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["futbol_ia"]
